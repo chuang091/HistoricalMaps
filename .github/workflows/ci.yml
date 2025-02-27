@@ -1,4 +1,4 @@
-name: CI/CD for Nuxt 3
+name: CI for Nuxt 3 (Dockerized)
 
 on:
   push:
@@ -7,36 +7,29 @@ on:
   pull_request:
     branches:
       - main
-      
+
 jobs:
   test:
+    name: Run Vitest Tests in Docker
     runs-on: ubuntu-latest
 
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: 20
-          cache: 'npm'
+      - name: Build Docker Image
+        run: docker build -t baotu .
 
-      - name: Install dependencies
-        run: npm install
+      - name: Run Nuxt Server in Background
+        run: docker run -d -p 3000:3000 --name nuxt-test baotu
 
-      - name: Build Nuxt
-        run: NITRO_PRESET=node npm run build  # 🚀 確保 CI 環境生成 .output/server/index.mjs
-
-      - name: Start Nuxt Server in Background
-        run: NITRO_PRESET=node npm run preview &
-        env:
-          TEST_BASE_URL: http://localhost:3000
-
-      - name: Wait for Nuxt Server to be Ready
+      - name: Wait for Nuxt Server to Start
         run: sleep 10
 
       - name: Run Tests
         run: npm run test
         env:
           TEST_BASE_URL: http://localhost:3000
+
+      - name: Stop Docker Container
+        run: docker stop nuxt-test
