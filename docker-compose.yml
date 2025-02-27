@@ -1,9 +1,13 @@
+version: '3.8'
 services:
   app:
     build: .
     working_dir: /app
     volumes:
       - .:/app
+      - /app/node_modules
+    environment:
+      - NODE_ENV=development
     command: npm run dev
     ports:
       - "3000:3000"  # Change host port to 3001 to avoid conflicts
@@ -13,6 +17,7 @@ services:
     working_dir: /app
     volumes:
       - .:/app
+      - /app/node_modules
     depends_on:
       - app
     command: npm run test
