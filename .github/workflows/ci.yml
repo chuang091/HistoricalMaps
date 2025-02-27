@@ -7,10 +7,9 @@ on:
   pull_request:
     branches:
       - main
-
+      
 jobs:
   test:
-    name: Run Vitest Tests
     runs-on: ubuntu-latest
 
     steps:
@@ -27,10 +26,10 @@ jobs:
         run: npm install
 
       - name: Build Nuxt
-        run: NITRO_PRESET=node npm run build  # 🔥 在 CI/CD 確保 .output/nitro.json 生成
+        run: NITRO_PRESET=node npm run build  # 🚀 確保 CI 環境生成 .output/server/index.mjs
 
       - name: Start Nuxt Server in Background
-        run: NITRO_PRESET=node npm run preview &  # 🔥 在 CI/CD 使用 'node'，避免 preview 錯誤
+        run: NITRO_PRESET=node npm run preview &
         env:
           TEST_BASE_URL: http://localhost:3000
 
