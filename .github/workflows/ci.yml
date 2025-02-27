@@ -1,4 +1,4 @@
-name: CI for Nuxt 3 (Dockerized)
+name: CI for Nuxt 3 (Dockerized with Docker Compose)
 
 on:
   push:
@@ -10,26 +10,31 @@ on:
 
 jobs:
   test:
-    name: Run Vitest Tests in Docker
+    name: Run Dockerized Nuxt Tests
     runs-on: ubuntu-latest
 
     steps:
+      # 1. 檢出代碼
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Build Docker Image
-        run: docker build -t baotu .
+      # 2. 設定 Docker Buildx
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v2
 
-      - name: Run Nuxt Server in Background
-        run: docker run -d -p 3000:3000 --name nuxt-test baotu
+      # 3. 設置 Docker Compose 環境
+      - name: Set up Docker Compose
+        run: |
+          docker-compose -f docker-compose.yml up --build -d
 
-      - name: Wait for Nuxt Server to Start
-        run: sleep 10
+      # 4. 等待應用啟動
+      - name: Wait for Nuxt app to start
+        run: sleep 10  # 等待 10 秒，確保 Nuxt 服務啟動
 
+      # 5. 運行測試
       - name: Run Tests
-        run: npm run test
-        env:
-          TEST_BASE_URL: http://localhost:3000
+        run: docker-compose exec test npm run test  # 在 test 服務中運行測試
 
-      - name: Stop Docker Container
-        run: docker stop nuxt-test
+      # 6. 停止 Docker 容器
+      - name: Stop Docker containers
+        run: docker-compose down
