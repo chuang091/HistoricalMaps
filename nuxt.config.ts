@@ -21,7 +21,7 @@ export default defineNuxtConfig({
   },
 
   nitro: {
-    preset: process.env.NITRO_PRESET || 'node',
+    preset: process.env.NITRO_PRESET || 'vercel',
   },
 
   devtools: { enabled: true },

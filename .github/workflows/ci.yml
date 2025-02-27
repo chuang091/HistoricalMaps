@@ -27,15 +27,15 @@ jobs:
         run: npm install
 
       - name: Build Nuxt
-        run: npm run build
+        run: NITRO_PRESET=node npm run build  # 🔥 在 CI/CD 確保 .output/nitro.json 生成
 
       - name: Start Nuxt Server in Background
-        run: npm run preview &  # Nuxt 以 Production 模式啟動
+        run: NITRO_PRESET=node npm run preview &  # 🔥 在 CI/CD 使用 'node'，避免 preview 錯誤
         env:
-          TEST_BASE_URL: http://localhost:3000  # 設定測試 API 的 baseURL
+          TEST_BASE_URL: http://localhost:3000
 
       - name: Wait for Nuxt Server to be Ready
-        run: sleep 10  # 等待 10 秒，確保 Nuxt 伺服器已經啟動
+        run: sleep 10
 
       - name: Run Tests
         run: npm run test
