@@ -1,7 +1,10 @@
 {
-    "extends": "./.nuxt/tsconfig.json",
     "compilerOptions": {
-      "strict": true, 
-      "types": ["@types/node", "@nuxt/types"]
+      "strict": true,
+      "types": ["@types/node", "@nuxt/types"],
+      "moduleResolution": "node",
+      "esModuleInterop": true,
+      "skipLibCheck": true
     }
   }
+  
