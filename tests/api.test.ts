@@ -11,4 +11,13 @@ describe('API Tests', () => {
     expect(json).toHaveProperty('message');
     expect(json.message).toBe('Hello from Nuxt API!');
   });
+
+    test('GET /api/hello should return a timestamp', async () => {
+        const response = await fetch(`${BASE_URL}/api/hello`);
+        const json = await response.json();
+    
+        expect(response.status).toBe(200);
+        expect(json).toHaveProperty('timestamp');
+        expect(new Date(json.timestamp)).toBeInstanceOf(Date);
+    });
 });
