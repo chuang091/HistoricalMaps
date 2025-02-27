@@ -26,16 +26,26 @@ jobs:
       - name: Install dependencies
         run: npm install
 
-      - name: Build Nuxt (確保 `.nuxt/tsconfig.json` 存在)
+      - name: Build Nuxt
         run: npm run build
+
+      - name: Start Nuxt Server in Background
+        run: npm run preview &  # Nuxt 預覽模式，後台運行
+        env:
+          TEST_BASE_URL: http://localhost:3000  # 設定測試 API 的 baseURL
+
+      - name: Wait for Nuxt Server to be Ready
+        run: sleep 5  # 等待 5 秒，確保伺服器已啟動
 
       - name: Run Tests
         run: npm run test
+        env:
+          TEST_BASE_URL: http://localhost:3000
 
   deploy:
     name: Deploy to Vercel
     runs-on: ubuntu-latest
-    needs: test # 只有測試通過才會執行部署
+    needs: test  # 只有測試通過才會部署
 
     steps:
       - name: Checkout code
