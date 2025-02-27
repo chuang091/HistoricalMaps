@@ -9,7 +9,7 @@
     "lint": "eslint --ext .js,.ts,.vue .",
     "prepare": "husky install",
     "test": "vitest",
-    "preview": "nuxt preview"
+    "preview": "node .output/server/index.mjs"
   },
   "keywords": [],
   "author": "",
