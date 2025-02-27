@@ -9,7 +9,7 @@ on:
       - main
 
 jobs:
-  test:
+  build:
     name: Run Dockerized Nuxt Tests
     runs-on: ubuntu-latest
 
