@@ -42,6 +42,5 @@ pnpm-error.log*
 Thumbs.db
 
 # Dependencies Lock Files (Keep only one)
-package-lock.json
 pnpm-lock.yaml
 yarn.lock
