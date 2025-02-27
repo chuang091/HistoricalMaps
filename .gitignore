@@ -44,3 +44,5 @@ Thumbs.db
 # Dependencies Lock Files (Keep only one)
 pnpm-lock.yaml
 yarn.lock
+
+.vercel

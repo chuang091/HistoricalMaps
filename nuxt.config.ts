@@ -21,7 +21,7 @@ export default defineNuxtConfig({
   },
 
   nitro: {
-    preset: 'vercel' // 部署到 Vercel 時需要
+    preset: process.env.NITRO_PRESET || 'node',
   },
 
   devtools: { enabled: true },
