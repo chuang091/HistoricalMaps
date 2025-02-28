@@ -4,13 +4,14 @@ import mapboxgl from 'mapbox-gl';
 import { useRuntimeConfig } from '#imports';
 
 const config = useRuntimeConfig();
-const MAPBOX_ACCESS_TOKEN = config.public.mapboxAccessToken; // 讀取 Nuxt 3 環境變數
+const MAPBOX_ACCESS_TOKEN = config.public.mapboxToken; // 讀取 Nuxt 3 環境變數
 
 const mapContainer = ref(null);
 const map = ref(null);
 
 onMounted(() => {
   if (!MAPBOX_ACCESS_TOKEN) {
+    console.log( config.public.mapboxAccessToken)
     console.error("❌ Missing Mapbox Access Token");
     return;
   }

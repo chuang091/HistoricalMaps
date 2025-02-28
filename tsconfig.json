@@ -1,15 +1,4 @@
 {
-    "compilerOptions": {
-      "strict": true,
-      "types": ["@types/node", "@nuxt/types", "vitest/globals"],
-      "moduleResolution": "node",
-      "esModuleInterop": true,
-      "skipLibCheck": true,
-      "paths": {
-        "~/*": ["./*"],
-        "@/*": ["./*"],
-        "#imports": ["./.nuxt/imports.d.ts"]
-      }
-    }
-  }
-  
+  // https://nuxt.com/docs/guide/concepts/typescript
+  "extends": "./.nuxt/tsconfig.json"
+}

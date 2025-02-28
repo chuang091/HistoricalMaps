@@ -2,7 +2,7 @@
 export function useRuntimeConfig() {
     return {
       public: {
-        mapboxAccessToken: 'test-token'
+        mapboxToken: 'test-token'
       }
     }
   }

@@ -6,7 +6,7 @@ import Mapbox from '@/components/Map.vue'
 vi.mock('#imports', () => ({
   useRuntimeConfig: () => ({
     public: {
-      mapboxAccessToken: 'test-token'
+      mapboxToken: 'test-token'
     }
   })
 }));
