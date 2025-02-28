@@ -21,7 +21,11 @@ export default defineNuxtConfig({
   },
 
   nitro: {
-    preset: process.env.NITRO_PRESET || 'vercel',
+    preset: process.env.NITRO_PRESET || 'node',
+      serveStatic: true,
+      routeRules: {
+        '/api/**': { cors: true }  // Enable CORS for all API routes
+      }
   },
 
   devtools: { enabled: true },

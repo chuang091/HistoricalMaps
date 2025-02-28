@@ -1,5 +1,7 @@
 version: '3.8'
+
 services:
+  # Nuxt 應用服務與測試服務合併在同一容器中
   app:
     build: .
     working_dir: /app
@@ -8,16 +10,6 @@ services:
       - /app/node_modules
     environment:
       - NODE_ENV=development
-    command: npm run dev
+    command: sh -c "npm run dev & npm run test"  # 啟動 Nuxt 開發服務器並執行測試
     ports:
-      - "3000:3000"  # Change host port to 3001 to avoid conflicts
-
-  test:
-    build: .
-    working_dir: /app
-    volumes:
-      - .:/app
-      - /app/node_modules
-    depends_on:
-      - app
-    command: npm run test
+      - "3000:3000"  # 開放端口 3000
