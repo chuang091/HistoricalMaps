@@ -15,7 +15,10 @@ vi.mock('#imports', () => ({
 vi.mock('mapbox-gl', () => {
   const onMock = vi.fn();
   const MapMock = vi.fn(() => ({
-    on: onMock
+    on: onMock,
+    addSource: vi.fn(),
+    addLayer: vi.fn(),
+    setLayoutProperty: vi.fn()
   }));
   return {
     default: {
@@ -27,25 +30,36 @@ vi.mock('mapbox-gl', () => {
 
 describe('Mapbox.vue', () => {
   it('renders the map container', () => {
-    // mount 組件
-    const wrapper = mount(Mapbox);
+    // 使用全域 stub 取代 UToggle 組件
+    const wrapper = mount(Mapbox, {
+      global: {
+        stubs: {
+          UToggle: true
+        }
+      }
+    });
     // 檢查是否有一個 <div> 元素作為地圖容器
     const container = wrapper.find('div');
     expect(container.exists()).toBe(true);
   });
 
   it('initializes mapbox-gl with the correct access token', async () => {
-    // mount 組件
-    const wrapper = mount(Mapbox);
+    const wrapper = mount(Mapbox, {
+      global: {
+        stubs: {
+          UToggle: true
+        }
+      }
+    });
     // 等待 Vue 完成 onMounted hook
     await wrapper.vm.$nextTick();
 
-    // 取得剛才被 mock 的 Mapbox Map 建構子
+    // 取得被 mock 的 Mapbox 模組
     const mapboxgl = await import('mapbox-gl');
     // 驗證設定 token
     expect(mapboxgl.default.accessToken).toBe('test-token');
 
-    // 驗證 Mapbox Map 被呼叫（初始化）
+    // 驗證 Mapbox Map 被初始化時使用了正確的參數
     expect(mapboxgl.default.Map).toHaveBeenCalledWith(
       expect.objectContaining({
         container: expect.anything(),
