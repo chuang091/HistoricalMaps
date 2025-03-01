@@ -73,8 +73,6 @@ onMounted(() => {
         tileInfo.value = { message: "無法取得合併圖片" };
       }
 
-      console.log("🔍 API 查詢結果:", data);
-
       // 重新打開 SlideOver
       isSlideOverOpen.value = false;
       setTimeout(() => {

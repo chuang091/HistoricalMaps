@@ -16,7 +16,12 @@ export default defineNuxtConfig({
 
   runtimeConfig: {
     public: {
-      mapboxToken: process.env.MAPBOX_ACCESS_TOKEN || '' // Mapbox 金鑰
+      mapboxToken: process.env.MAPBOX_ACCESS_TOKEN, // Mapbox 金鑰
+      roboflowDataset: process.env.ROBOFLOW_DATASET,
+      roboflowVersion: process.env.ROBOFLOW_VERSION,
+    },
+    private: {
+      roboflowApiKey: process.env.ROBOFLOW_API_KEY,
     }
   },
 

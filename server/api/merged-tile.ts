@@ -44,7 +44,6 @@ export default defineEventHandler(async (event) => {
       const subX = tileX * scaleFactor + dx;
       const subY = tileY * scaleFactor + dy;
       const tileURL = `${TILE_SERVER_URL}-${targetZoom}-${subX}-${subY}`;
-      console.log(`🎯 載入瓦片: ${tileURL}`);
 
       tilePromises.push(
         loadImage(tileURL).then((img) => {
