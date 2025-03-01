@@ -12,6 +12,7 @@ export default defineNuxtConfig({
   modules: [
     '@nuxt/devtools', // Nuxt 開發工具（可選）
     '@nuxt/ui', // HTTP 模組
+    
   ],
 
   runtimeConfig: {
