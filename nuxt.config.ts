@@ -11,17 +11,12 @@ export default defineNuxtConfig({
 
   modules: [
     '@nuxt/devtools', // Nuxt 開發工具（可選）
-    '@nuxt/ui'
+    '@nuxtjs/tailwindcss', // Tailwind CSS
   ],
 
   runtimeConfig: {
     public: {
       mapboxToken: process.env.MAPBOX_ACCESS_TOKEN, // Mapbox 金鑰
-      roboflowDataset: process.env.ROBOFLOW_DATASET,
-      roboflowVersion: process.env.ROBOFLOW_VERSION,
-    },
-    private: {
-      roboflowApiKey: process.env.ROBOFLOW_API_KEY,
     }
   },
 
