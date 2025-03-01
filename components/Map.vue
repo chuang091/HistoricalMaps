@@ -1,7 +1,7 @@
 <script setup>
 import { onMounted, ref, watch } from 'vue';
 import mapboxgl from 'mapbox-gl';
-import { useRuntimeConfig } from '#imports';
+import { useRuntimeConfig, useFetch } from '#imports';
 
 const config = useRuntimeConfig();
 const MAPBOX_ACCESS_TOKEN = config.public.mapboxToken;
@@ -10,16 +10,16 @@ const mapContainer = ref(null);
 const map = ref(null);
 const isHistoricalLayerVisible = ref(true);
 const isMapReady = ref(false);
-const selectedTiles = ref([]); // 存所有選取的瓦片區域
+const selectedTiles = ref([]); // 用戶選取的瓦片區域
+const presetTiles = ref([]); // 從 `coordinates.txt` 讀取的瓦片區域
 
-onMounted(() => {
+onMounted(async () => {
   if (!MAPBOX_ACCESS_TOKEN) {
     console.error("❌ Missing Mapbox Access Token");
     return;
   }
 
   mapboxgl.accessToken = MAPBOX_ACCESS_TOKEN;
-
   if (!mapContainer.value) return;
 
   console.log("✅ Map container is ready!");
@@ -31,7 +31,7 @@ onMounted(() => {
     zoom: 12
   });
 
-  map.value.on('load', () => {
+  map.value.on('load', async () => {
     console.log("🗺️ Mapbox is loaded!");
 
     // **加入歷史地圖圖層**
@@ -51,7 +51,23 @@ onMounted(() => {
       layout: { visibility: isHistoricalLayerVisible.value ? 'visible' : 'none' }
     });
 
-    // **建立高亮選取範圍的圖層**
+    // **建立 "預載入瓦片" 圖層 (從 coordinates.txt 讀取)**
+    map.value.addSource('preset-layer', {
+      type: 'geojson',
+      data: { type: 'FeatureCollection', features: [] }
+    });
+
+    map.value.addLayer({
+      id: 'preset-layer',
+      type: 'fill',
+      source: 'preset-layer',
+      paint: {
+        'fill-color': '#008000', // **綠色**
+        'fill-opacity': 0.3
+      }
+    });
+
+    // **建立 "使用者選取" 圖層**
     map.value.addSource('highlight-layer', {
       type: 'geojson',
       data: { type: 'FeatureCollection', features: [] }
@@ -62,13 +78,20 @@ onMounted(() => {
       type: 'fill',
       source: 'highlight-layer',
       paint: {
-        'fill-color': '#ff0000',
+        'fill-color': '#ff0000', // **紅色**
         'fill-opacity': 0.5
       }
     });
 
     isMapReady.value = true;
-    console.log("📍 Historical Map Layer Added!");
+    console.log("📍 Layers Added!");
+
+    // **讀取 API 獲取 Zoom 15 預選範圍**
+    const { data } = await useFetch('/api/load-coordinates');
+    if (data.value?.success) {
+      presetTiles.value = data.value.tiles;
+      updatePresetLayer(); // **更新預載入圖層**
+    }
   });
 
   // **處理點擊事件**
@@ -108,31 +131,47 @@ onMounted(() => {
   });
 });
 
-// **更新高亮圖層**
+// **更新 "使用者選取" 圖層**
 const updateHighlightLayer = () => {
   if (!map.value) return;
-
   const highlightSource = map.value.getSource('highlight-layer');
 
   if (highlightSource) {
     highlightSource.setData({
       type: 'FeatureCollection',
-      features: selectedTiles.value.map(tile => ({
-        type: 'Feature',
-        geometry: {
-          type: 'Polygon',
-          coordinates: [[
-            tileToLngLat(tile.tileX, tile.tileY),
-            tileToLngLat(tile.tileX + 1, tile.tileY),
-            tileToLngLat(tile.tileX + 1, tile.tileY + 1),
-            tileToLngLat(tile.tileX, tile.tileY + 1),
-            tileToLngLat(tile.tileX, tile.tileY) // **閉合區域**
-          ]]
-        }
-      }))
+      features: selectedTiles.value.map(tile => createPolygon(tile, '#ff0000'))
     });
   }
 };
+
+// **更新 "預載入" 圖層**
+const updatePresetLayer = () => {
+  if (!map.value) return;
+  const presetSource = map.value.getSource('preset-layer');
+
+  if (presetSource) {
+    presetSource.setData({
+      type: 'FeatureCollection',
+      features: presetTiles.value.map(tile => createPolygon(tile, '#008000'))
+    });
+  }
+};
+
+// **建立瓦片的 Polygon**
+const createPolygon = (tile, color) => ({
+  type: 'Feature',
+  geometry: {
+    type: 'Polygon',
+    coordinates: [[
+      tileToLngLat(tile.tileX, tile.tileY),
+      tileToLngLat(tile.tileX + 1, tile.tileY),
+      tileToLngLat(tile.tileX + 1, tile.tileY + 1),
+      tileToLngLat(tile.tileX, tile.tileY + 1),
+      tileToLngLat(tile.tileX, tile.tileY) // **閉合區域**
+    ]]
+  },
+  properties: { color }
+});
 
 // **轉換 Tile X/Y 到經緯度**
 const tileToLngLat = (x, y, zoom = 15) => {
