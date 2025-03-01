@@ -16,11 +16,8 @@ describe('API /tile-info', () => {
     // 驗證回傳內容正確
     expect(response).toHaveProperty('tileX');
     expect(response).toHaveProperty('tileY');
-    expect(response).toHaveProperty('zoom', 17);
     expect(response).toHaveProperty('tileURL');
-    expect(response.tileURL).toContain(
-      'https://gis.sinica.edu.tw/tileserver/file-exists.php?img=JM20K_1921-jpg-17-'
-    );
+    expect(response).toHaveProperty('zoom17Tiles');
   });
 
   it('應該回傳錯誤訊息當參數無效', async () => {

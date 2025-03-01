@@ -2,15 +2,17 @@
 import { onMounted, ref, watch } from 'vue';
 import mapboxgl from 'mapbox-gl';
 import { useRuntimeConfig } from '#imports';
+import SlideOver from '@/components/SlideOver.vue';
 
 const config = useRuntimeConfig();
-const MAPBOX_ACCESS_TOKEN = config.public.mapboxToken; // 讀取 Nuxt 3 環境變數
+const MAPBOX_ACCESS_TOKEN = config.public.mapboxToken;
 
 const mapContainer = ref(null);
 const map = ref(null);
 const isHistoricalLayerVisible = ref(true);
 const isMapReady = ref(false);
-const tileInfo = ref(null);
+const tileInfo = ref({}); // 確保 tileInfo 有初始值
+const isSlideOverOpen = ref(false);
 
 onMounted(() => {
   if (!MAPBOX_ACCESS_TOKEN) {
@@ -54,17 +56,34 @@ onMounted(() => {
     console.log("📍 Historical Map Layer Added!");
   });
 
+  // 點擊地圖時，呼叫 API 取得合併瓦片
   map.value.on('click', async (e) => {
     console.log("🖱️ Clicked on map:", e.lngLat);
 
     try {
-      const response = await fetch(`/api/tile-info?lat=${e.lngLat.lat}&lng=${e.lngLat.lng}`);
+      const response = await fetch(`/api/merged-tile?lat=${e.lngLat.lat}&lng=${e.lngLat.lng}`);
       const data = await response.json();
 
-      tileInfo.value = data || { message: "沒有找到對應資料" };
+      if (data.mergedImage) {
+        tileInfo.value = {
+          ...data,
+          mergedImage: data.mergedImage
+        };
+      } else {
+        tileInfo.value = { message: "無法取得合併圖片" };
+      }
+
+      console.log("🔍 API 查詢結果:", data);
+
+      // 重新打開 SlideOver
+      isSlideOverOpen.value = false;
+      setTimeout(() => {
+        isSlideOverOpen.value = true;
+      }, 100);
     } catch (error) {
       console.error("❌ API 查詢錯誤:", error);
       tileInfo.value = { message: "查詢失敗" };
+      isSlideOverOpen.value = true;
     }
   });
 
@@ -73,7 +92,6 @@ onMounted(() => {
   });
 });
 
-// **監聽 `isHistoricalLayerVisible` 變更**
 watch(isHistoricalLayerVisible, (newValue) => {
   if (!map.value || !map.value.getLayer('historical-map-layer')) return;
   map.value.setLayoutProperty(
@@ -86,6 +104,7 @@ watch(isHistoricalLayerVisible, (newValue) => {
 
 <template>
   <div ref="mapContainer" style="width: 100%; height: 100vh; background: lightgray; position: relative;">
+    <!-- 圖層切換 -->
     <div class="absolute top-4 left-4 bg-white p-3 rounded shadow-md border border-gray-300 z-10">
       <label class="flex items-center space-x-2">
         <span class="text-gray-800 text-sm">歷史地圖</span>
@@ -93,12 +112,7 @@ watch(isHistoricalLayerVisible, (newValue) => {
       </label>
     </div>
 
-    <!-- ✅ 點擊地圖時顯示 XYZ 瓦片座標 -->
-    <div v-if="tileInfo" class="absolute bottom-4 left-4 bg-white p-3 rounded shadow-md border border-gray-300 z-10">
-      <p class="text-sm text-gray-800">X: {{ tileInfo.tileX }}</p>
-      <p class="text-sm text-gray-800">Y: {{ tileInfo.tileY }}</p>
-      <p class="text-sm text-gray-800">Zoom: {{ tileInfo.zoom }}</p>
-      <p>{{ tileInfo.tileURL }}</p>
-    </div>
+    <!-- ✅ 引入 `SlideOver.vue` -->
+    <SlideOver v-model:isOpen="isSlideOverOpen" :tileInfo="tileInfo" />
   </div>
 </template>
