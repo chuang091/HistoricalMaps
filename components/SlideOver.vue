@@ -1,5 +1,5 @@
 <script setup>
-import { defineProps, defineEmits, computed, ref, watch, nextTick } from 'vue';
+import { defineProps, defineEmits, computed, ref, onMounted, watch, nextTick } from 'vue';
 import Prism from 'prismjs';
 import 'prismjs/themes/prism-tomorrow.css';
 import 'prismjs/components/prism-python';
@@ -15,7 +15,7 @@ const localIsOpen = computed({
   set: (value) => emit('update:isOpen', value)
 });
 
-// ✅ 生成 Python 代碼
+// ✅ 產生 Python 代碼
 const pythonCode = computed(() => {
   if (!props.selectedTiles.length) return "# 沒有選取任何瓦片\nprint('No tiles selected')";
 
@@ -26,19 +26,38 @@ import math
 import requests
 from io import BytesIO
 from PIL import Image
+from dotenv import load_dotenv
+import roboflow
+from datetime import datetime
 
-# 瓦片伺服器 URL
+# ✅ 讀取 .env 內的環境變數
+load_dotenv()
+
+# ✅ Roboflow API 設定
+ROBOFLOW_API_KEY = os.getenv("ROBOFLOW_API_KEY")
+ROBOFLOW_WORKSPACE = "bt-6pown"
+ROBOFLOW_PROJECT = "baotu-n4pla"
+BASE_OUTPUT_DIR = "./output"
+
+if not ROBOFLOW_API_KEY or not ROBOFLOW_WORKSPACE or not ROBOFLOW_PROJECT:
+    raise ValueError("❌ API Key、Workspace 或 Project 設定錯誤，請確認 .env 檔案")
+
+# ✅ 初始化 Roboflow
+rf = roboflow.Roboflow(api_key=ROBOFLOW_API_KEY)
+workspace = rf.workspace()
+
+# ✅ 瓦片伺服器 URL
 TILE_SERVER_URL = "https://gis.sinica.edu.tw/tileserver/file-exists.php?img=JM20K_1921-jpg"
 
-# 影像拼接設定
-INPUT_ZOOM = 15  # 輸入 zoom
-TARGET_ZOOM = 17  # 目標 zoom
-TILE_SIZE = 256  # 單個瓦片大小 (px)
-SCALE_FACTOR = 2 ** (TARGET_ZOOM - INPUT_ZOOM)  # 放大倍率 (4 倍)
-GRID_SIZE = 4  # 需要的 zoom=17 瓦片數量 (4x4)
+# ✅ 影像拼接設定
+INPUT_ZOOM = 15  
+TARGET_ZOOM = 17  
+TILE_SIZE = 256  
+SCALE_FACTOR = 2 ** (TARGET_ZOOM - INPUT_ZOOM)  
+GRID_SIZE = 4  
 
+# ✅ 下載瓦片
 def get_tile_image(x, y, zoom):
-    """從伺服器下載瓦片"""
     tile_url = f"{TILE_SERVER_URL}-{zoom}-{x}-{y}"
     try:
         response = requests.get(tile_url, timeout=10)
@@ -50,7 +69,8 @@ def get_tile_image(x, y, zoom):
         print(f"❌ 錯誤: {e}")
     return None
 
-def merge_tiles(base_x, base_y, output_path="stitched.png"):
+# ✅ 合併 4x4 瓦片
+def merge_tiles(base_x, base_y, output_path):
     stitched_image = Image.new("RGB", (TILE_SIZE * GRID_SIZE, TILE_SIZE * GRID_SIZE))
 
     for dx in range(GRID_SIZE):
@@ -61,36 +81,51 @@ def merge_tiles(base_x, base_y, output_path="stitched.png"):
             if img:
                 stitched_image.paste(img, (dx * TILE_SIZE, dy * TILE_SIZE))
 
-    # 儲存影像
     stitched_image.save(output_path)
-    print(f"✅ 影像已成功存為: {output_path}")
+    print(f"✅ 影像已存為: {output_path}")
 
-if __name__ == "__main__":
-    tiles = [
-        ${tileCoords}
-    ]
-    
-    for x, y in tiles:
-        zoom_17_x = x * SCALE_FACTOR
-        zoom_17_y = y * SCALE_FACTOR
-        output_filename = f"{zoom_17_x}_{zoom_17_y}.jpg"
-        merge_tiles(zoom_17_x, zoom_17_y, output_filename)
+# ✅ 設定存放目錄
+current_time = datetime.now().strftime("%Y%m%d_%H%M%S")
+output_dir = os.path.join(BASE_OUTPUT_DIR, current_time)
+os.makedirs(output_dir, exist_ok=True)
+
+# ✅ 處理選取的瓦片
+tiles = [
+    ${tileCoords}
+]
+
+for x, y in tiles:
+    zoom_17_x = x * SCALE_FACTOR
+    zoom_17_y = y * SCALE_FACTOR
+    output_filename = os.path.join(output_dir, f"{zoom_17_x}_{zoom_17_y}.jpg")
+    merge_tiles(zoom_17_x, zoom_17_y, output_filename)
+
+# ✅ 上傳到 Roboflow
+print(f"🚀 開始上傳 {output_dir} 至 Roboflow 專案 {ROBOFLOW_PROJECT} ...")
+upload_response = workspace.upload_dataset(
+    dataset_path=output_dir,
+    project_name=ROBOFLOW_PROJECT,
+    num_workers=10,
+    project_license="MIT",
+    project_type="instance_segmentation",
+    batch_name=current_time,
+    num_retries=3,
+)
+
+print("✅ 上傳成功！")
 `;
 });
 
-// ✅ 代碼高亮 (確保高亮在 DOM 更新後執行)
+// ✅ 代碼高亮
 const codeBlock = ref(null);
-
 const highlightCode = async () => {
-  await nextTick(); // **確保 DOM 更新完成**
+  await nextTick();
   if (codeBlock.value) {
     Prism.highlightElement(codeBlock.value);
   }
 };
-
-// ✅ **監聽 `pythonCode` 變化時重新高亮**
-watch(pythonCode, async () => {
-  await nextTick();
+watch(pythonCode, highlightCode, { flush: 'post' });
+onMounted(() => {
   highlightCode();
 });
 
@@ -123,7 +158,6 @@ const copyCode = async () => {
             生成的 Python 代碼
           </h3>
           <div class="flex space-x-2">
-            <!-- 🔥 複製按鈕 -->
             <UButton color="gray" variant="ghost" icon="i-heroicons-clipboard-document" @click="copyCode" />
             <UButton color="gray" variant="ghost" icon="i-heroicons-x-mark-20-solid" @click="localIsOpen = false" />
           </div>
@@ -131,7 +165,7 @@ const copyCode = async () => {
       </template>
 
       <div class="h-full flex-1 overflow-auto">
-        <pre class="rounded-lg overflow-auto text-sm max-h-[80vh]">
+        <pre class="rounded-lg overflow-auto text-sm">
           <code ref="codeBlock" class="language-python">{{ pythonCode }}</code>
         </pre>
       </div>
@@ -146,7 +180,7 @@ pre {
   color: #ffffff;
   border-radius: 8px;
   padding: 10px;
-  max-height: 80vh; /* **讓代碼可以滾動** */
+  max-height: 80vh;
   overflow: auto;
   font-size: 14px;
 }

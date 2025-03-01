@@ -33,11 +33,6 @@ watchEffect(() => {
     updateHighlightLayer(selectedTiles.value);
   }
 });
-
-// watch selectedTiles
-watch(selectedTiles, (tiles) => {
-  console.log('selectedTiles:', tiles);
-});
 </script>
 
 <template>
