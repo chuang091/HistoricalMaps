@@ -11,7 +11,7 @@ export default defineNuxtConfig({
 
   modules: [
     '@nuxt/devtools', // Nuxt 開發工具（可選）
-    '@nuxtjs/tailwindcss', // Tailwind CSS
+    '@nuxt/ui'
   ],
 
   runtimeConfig: {
