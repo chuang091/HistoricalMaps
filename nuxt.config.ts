@@ -18,6 +18,9 @@ export default defineNuxtConfig({
   runtimeConfig: {
     public: {
       mapboxToken: process.env.MAPBOX_ACCESS_TOKEN, // Mapbox 金鑰
+    },
+    private: {
+      mongoUri: process.env.MONGO_URI, // MongoDB 連線 URI
     }
   },
 

@@ -35,7 +35,9 @@ export function useMap(mapContainer) {
 
   // 從 API 載入預選瓦片資料並更新 preset-layer
   const loadPresetTiles = async () => {
-    const { data } = await useFetch('/api/load-coordinates');
+    const { data } = await useFetch('/api/load-coordinates', {
+      query: { type: 'segment' }
+    });    
     if (data.value?.success) {
       const presetTiles = data.value.tiles;
       const presetSource = map.value.getSource('preset-layer');
@@ -45,6 +47,8 @@ export function useMap(mapContainer) {
           features: presetTiles.map(tile => createPolygon(tile))
         });
       }
+    } else {
+      console.error("❌ Failed to load preset tiles");
     }
   };
 
